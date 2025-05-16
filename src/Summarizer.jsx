@@ -5,16 +5,14 @@ export default function Summarizer() {
   const [result, setResult] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [paragraphs, setParagraphs] = useState([]);
-  const [showFinal, setShowFinal] = useState(false);
+  const [streamed, setStreamed] = useState("");
   const animationTimeouts = useRef([]);
 
   const handleSummarize = async () => {
     setLoading(true);
     setError(null);
     setResult("");
-    setParagraphs([]);
-    setShowFinal(false);
+    setStreamed("");
     animationTimeouts.current.forEach(clearTimeout);
     animationTimeouts.current = [];
     try {
@@ -25,36 +23,19 @@ export default function Summarizer() {
       });
       if (!res.ok) throw new Error("Failed to summarize");
       const reader = res.body.getReader();
-      let received = "";
       let decoder = new TextDecoder();
       let done = false;
-      let paraList = [];
-      let lastParaCount = 0;
+      let accumulated = "";
       while (!done) {
         const { value, done: doneReading } = await reader.read();
         done = doneReading;
         if (value) {
-          received += decoder.decode(value, { stream: true });
-          // Split into paragraphs (by newlines or bullet points)
-          let parts = received.split(/\n(?=- |•|\d+\.)/g);
-          // Only add new paragraphs
-          for (let i = lastParaCount; i < parts.length; i++) {
-            let para = parts[i].trim();
-            if (para) {
-              paraList.push(para);
-              setParagraphs(current => [...current, para]);
-              // Remove the 'thinking' effect after 5-10s
-              const timeout = setTimeout(() => {
-                setParagraphs(current => current.filter((_, idx) => idx !== 0));
-              }, 5000 + Math.random() * 5000);
-              animationTimeouts.current.push(timeout);
-            }
-          }
-          lastParaCount = parts.length;
+          const chunk = decoder.decode(value, { stream: true });
+          accumulated += chunk;
+          setStreamed(accumulated);
         }
       }
-      setShowFinal(true);
-      setResult(received.trim());
+      setResult(accumulated.trim());
     } catch (e) {
       setError(e.message);
     } finally {
@@ -77,19 +58,12 @@ export default function Summarizer() {
       </button>
       {error && <div style={{ color: "red", marginTop: 16 }}>{error}</div>}
       <div style={{ marginTop: 24, minHeight: 80 }}>
-        {paragraphs.map((para, idx) => (
-          <div key={idx} className="summary-para" style={{
-            background: "#f0f4fa",
-            padding: 16,
-            borderRadius: 8,
-            marginBottom: 12,
-            opacity: 1,
-            transform: "translateY(0)",
-            transition: "all 0.7s cubic-bezier(.4,2,.6,1)",
-            animation: "fadeInUp 0.7s"
-          }}>{para}</div>
-        ))}
-        {showFinal && result && (
+        {streamed && (
+          <div style={{ background: "#f0f4fa", padding: 16, borderRadius: 8, minHeight: 60, fontSize: 17, whiteSpace: "pre-wrap", transition: "all 0.7s cubic-bezier(.4,2,.6,1)", animation: "fadeInUp 0.7s" }}>
+            {streamed}
+          </div>
+        )}
+        {result && !loading && (
           <div style={{ background: "#e3fcec", padding: 16, borderRadius: 8, marginTop: 16, boxShadow: "0 2px 8px #0001", transition: "all 1s" }}>
             <h3>Summary:</h3>
             <div style={{ whiteSpace: "pre-line", fontSize: 17 }}>{result}</div>
