@@ -1,24 +1,83 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import ReactMarkdown from "react-markdown";
+
+const FADE_OUT_DURATION = 5000; // ms
+const FADE_IN_DURATION = 200; // ms
 
 export default function Summarizer() {
   const [text, setText] = useState("");
   const [result, setResult] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [streamed, setStreamed] = useState("");
-  const [think, setThink] = useState("");
+  const [thinkParagraphs, setThinkParagraphs] = useState([]); // {key, text, visible}
   const [thinkKey, setThinkKey] = useState(0);
-  const thinkTimeout = useRef(null);
+  const currentThinkKey = useRef(null);
+  const fadeTimeouts = useRef({});
+
+  useEffect(() => {
+    return () => {
+      Object.values(fadeTimeouts.current).forEach(clearTimeout);
+      fadeTimeouts.current = {};
+    };
+  }, []);
+
+  function startNewThinkParagraph() {
+    const newKey = thinkKey + 1;
+    setThinkKey(newKey);
+    setThinkParagraphs(paragraphs => {
+      // Fade out and remove only the first visible box (oldest)
+      const idxToFade = paragraphs.findIndex(p => p.visible !== false);
+      let updated = paragraphs;
+      if (idxToFade !== -1) {
+        const keyToFade = paragraphs[idxToFade].key;
+        updated = paragraphs.map((p, idx) =>
+          idx === idxToFade ? { ...p, visible: false } : p
+        );
+        fadeTimeouts.current[keyToFade] = setTimeout(() => {
+          setThinkParagraphs(pars => pars.filter(pp => pp.key !== keyToFade));
+        }, FADE_OUT_DURATION);
+      }
+      return [
+        ...updated,
+        { key: newKey, text: "", visible: false }
+      ];
+    });
+    currentThinkKey.current = newKey;
+    setTimeout(() => {
+      setThinkParagraphs(paragraphs =>
+        paragraphs.map(p =>
+          p.key === newKey ? { ...p, visible: true } : p
+        )
+      );
+    }, 10);
+  }
+
+  function fadeOutCurrentThinkParagraph() {
+    const keyToFade = currentThinkKey.current;
+    if (keyToFade !== null) {
+      setThinkParagraphs(paragraphs =>
+        paragraphs.map(p =>
+          p.key === keyToFade ? { ...p, visible: false } : p
+        )
+      );
+      fadeTimeouts.current[keyToFade] = setTimeout(() => {
+        setThinkParagraphs(paragraphs =>
+          paragraphs.filter(p => p.key !== keyToFade)
+        );
+      }, FADE_OUT_DURATION);
+      currentThinkKey.current = null;
+    }
+  }
 
   const handleSummarize = async () => {
     setLoading(true);
     setError(null);
     setResult("");
-    setStreamed("");
-    setThink("");
+    setThinkParagraphs([]);
     setThinkKey(0);
-    if (thinkTimeout.current) clearTimeout(thinkTimeout.current);
+    currentThinkKey.current = null;
+    Object.values(fadeTimeouts.current).forEach(clearTimeout);
+    fadeTimeouts.current = {};
     try {
       const res = await fetch("http://localhost:5000/api/summarize", {
         method: "POST",
@@ -30,57 +89,48 @@ export default function Summarizer() {
       let decoder = new TextDecoder();
       let done = false;
       let accumulated = "";
-      let thinkQueue = [];
-      let thinkActive = false;
-      let thinkParagraph = "";
-      let thinkParagraphKey = 0;
+      let firstResult = true;
       while (!done) {
         const { value, done: doneReading } = await reader.read();
         done = doneReading;
         if (value) {
           const chunk = decoder.decode(value, { stream: true });
-          // Parse lines for THINK: and RESULT:
           chunk.split(/\n/).forEach(line => {
-            if (line.startsWith("THINK:")) {
-              const thinkText = line.replace(/^THINK:/, "").trim();
-              if (thinkText) thinkQueue.push(thinkText);
-            } else if (line.startsWith("RESULT:")) {
-              const resultText = line.replace(/^RESULT:/, "");
-              accumulated += resultText;
-              setStreamed(accumulated);
-            }
-          });
-          // Show next think paragraph if not already showing
-          if (!thinkActive && thinkQueue.length > 0) {
-            thinkActive = true;
-            const showNextThink = () => {
-              if (thinkQueue.length === 0) {
-                setThink("");
-                thinkActive = false;
-                return;
+            if (!line.trim()) return;
+            try {
+              const obj = JSON.parse(line);
+              if (obj.THINK_START || obj.THINK_PARAGRAPH) {
+                startNewThinkParagraph();
+              } else if (obj.THINK !== undefined) {
+                if (currentThinkKey.current === null) {
+                  startNewThinkParagraph();
+                }
+                setThinkParagraphs(paragraphs =>
+                  paragraphs.map((p, idx, arr) =>
+                    p.key === currentThinkKey.current && idx === arr.length - 1
+                      ? { ...p, text: p.text + obj.THINK }
+                      : p
+                  )
+                );
+              } else if (obj.THINK_END) {
+                fadeOutCurrentThinkParagraph();
+              } else if (obj.RESULT !== undefined) {
+                let char = obj.RESULT;
+                if (firstResult && /\s/.test(char)) return;
+                firstResult = false;
+                accumulated += char;
+                setResult(accumulated);
               }
-              thinkParagraph = thinkQueue.shift();
-              thinkParagraphKey++;
-              setThink(thinkParagraph);
-              setThinkKey(thinkParagraphKey);
-              thinkTimeout.current = setTimeout(() => {
-                setThink("");
-                setTimeout(() => {
-                  showNextThink();
-                }, 400); // fade out before next
-              }, 5000);
-            };
-            showNextThink();
-          }
+            } catch (e) {}
+          });
         }
       }
-      setResult(accumulated.trim());
-      setThink("");
     } catch (e) {
       setError(e.message);
     } finally {
       setLoading(false);
-      if (thinkTimeout.current) clearTimeout(thinkTimeout.current);
+      Object.values(fadeTimeouts.current).forEach(clearTimeout);
+      fadeTimeouts.current = {};
     }
   };
 
@@ -102,36 +152,40 @@ export default function Summarizer() {
         {/* THINK BOX */}
         <div style={{ flex: 1, minWidth: 220, maxWidth: 320, position: 'relative', minHeight: 80 }}>
           <div style={{ fontWeight: 700, marginBottom: 8, color: '#1976d2', fontSize: 18 }}>AI is thinking...</div>
-          <div key={thinkKey} className={think ? "think-para fade-in" : "think-para fade-out"} style={{
-            background: "#fffbe6",
-            padding: 16,
-            borderRadius: 10,
-            minHeight: 60,
-            fontSize: 16,
-            color: '#7a5d00',
-            boxShadow: '0 2px 8px #0001',
-            opacity: think ? 1 : 0,
-            transition: 'opacity 0.5s, transform 0.5s',
-            transform: think ? 'translateY(0)' : 'translateY(30px)',
-            position: 'absolute',
-            width: '100%',
-            zIndex: 2
-          }}>
-            <ReactMarkdown>{think}</ReactMarkdown>
+          <div style={{ position: 'relative', minHeight: 60 }}>
+            {thinkParagraphs.map(p => (
+              <div
+                key={p.key}
+                className={p.visible ? "think-para fade-in-fast" : "think-para fade-out-fast"}
+                style={{
+                  background: "#fffbe6",
+                  padding: 16,
+                  borderRadius: 10,
+                  fontSize: 16,
+                  color: '#7a5d00',
+                  boxShadow: '0 2px 8px #0001',
+                  marginBottom: 16,
+                  width: '100%',
+                  zIndex: 2,
+                  opacity: p.visible ? 1 : 0,
+                  transition: p.visible
+                    ? `opacity ${FADE_IN_DURATION}ms cubic-bezier(.4,0,.2,1)`
+                    : `opacity ${FADE_OUT_DURATION}ms cubic-bezier(.4,0,.2,1)`
+                }}
+              >
+                <ReactMarkdown>{p.text}</ReactMarkdown>
+              </div>
+            ))}
           </div>
         </div>
         {/* RESULT BOX */}
         <div style={{ flex: 2, minWidth: 320 }}>
           <div style={{ fontWeight: 700, marginBottom: 8, color: '#1976d2', fontSize: 18 }}>Summary</div>
           <div style={{ background: "#f0f4fa", padding: 18, borderRadius: 10, minHeight: 80, fontSize: 17, boxShadow: "0 2px 8px #0001", whiteSpace: "pre-wrap", transition: "all 0.7s cubic-bezier(.4,2,.6,1)" }}>
-            <ReactMarkdown>{streamed}</ReactMarkdown>
+            <ReactMarkdown>{result}</ReactMarkdown>
           </div>
         </div>
       </div>
-      <style>{`
-        .fade-in { opacity: 1; transform: translateY(0); }
-        .fade-out { opacity: 0; transform: translateY(30px); }
-      `}</style>
     </div>
   );
 }  
