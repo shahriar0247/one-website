@@ -1,5 +1,7 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route, Link as RouterLink, Navigate, useLocation } from "react-router-dom";
+import { ThemeProvider } from './theme/ThemeProvider';
+import Layout from './components/Layout';
 import WordCounter from "./WordCounter.jsx";
 import GrammarChecker from "./GrammarChecker.jsx";
 import Paraphraser from "./Paraphraser.jsx";
@@ -92,20 +94,19 @@ function Main() {
 
 function App() {
   return (
-    <Router>
-      <Box sx={{ display: 'flex', fontFamily: 'Roboto' }}>
-        <CssBaseline />
-        <AppBar position="fixed" sx={{ zIndex: (theme) => theme.zIndex.drawer + 1, fontFamily: 'Roboto' }} color="primary">
-          <Toolbar>
-            <Typography variant="h6" noWrap component="div" fontFamily="Roboto">
-              One-Use Websites
-            </Typography>
-          </Toolbar>
-        </AppBar>
-        <Sidebar />
-        <Main />
-      </Box>
-    </Router>
+    <ThemeProvider>
+      <Router>
+        <Layout>
+          <Routes>
+            <Route path="/" element={<Navigate to="/word-counter" replace />} />
+            {tools.map(tool => (
+              <Route key={tool.path} path={tool.path} element={tool.component} />
+            ))}
+            <Route path="*" element={<Navigate to="/word-counter" replace />} />
+          </Routes>
+        </Layout>
+      </Router>
+    </ThemeProvider>
   );
 }
 
