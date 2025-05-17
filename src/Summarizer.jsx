@@ -1,8 +1,10 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import ReactMarkdown from "react-markdown";
 import Button from '@mui/material/Button';
 import Paper from '@mui/material/Paper';
 import Typography from '@mui/material/Typography';
+import Collapse from '@mui/material/Collapse';
+import { TransitionGroup } from 'react-transition-group';
 
 function decodeHTMLEntities(str) {
   // Handles \u003c and \u003e and others
@@ -12,138 +14,207 @@ function decodeHTMLEntities(str) {
 export default function Summarizer() {
   const [text, setText] = useState("");
   const [summary, setSummary] = useState("");
-  const [thinking, setThinking] = useState(null); // {id, text, visible}
+  const [thinkBoxes, setThinkBoxes] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const thinkId = useRef(0);
+  const timeoutRef = useRef(null);
 
-  // Replace the think bubble text
-  function replaceThinkBubble(newText) {
-    thinkId.current += 1;
-    setThinking({ id: thinkId.current, text: newText, visible: true });
-  }
+  // Clear any pending timeouts on unmount
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    };
+  }, []);
 
-  // Update the current think bubble's text (letter by letter)
-  function updateThinkText(char) {
-    setThinking(prev => prev ? { ...prev, text: prev.text + char } : null);
+  function updateThinkBoxes(newText, forceNew = false) {
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+
+    if (forceNew) {
+      // Remove the previous box after a delay
+      if (thinkBoxes.length > 0) {
+        const lastBox = thinkBoxes[thinkBoxes.length - 1];
+        setThinkBoxes(prev => prev.map((box, i) =>
+          i === prev.length - 1 ? { ...box, isVisible: false } : box
+        ));
+
+        // Add new box after the previous one starts fading
+        timeoutRef.current = setTimeout(() => {
+          setThinkBoxes(prev => [
+            ...prev.filter(box => box.id !== lastBox.id),
+            {
+              id: thinkId.current++,
+              text: newText.trim(),
+              isVisible: true
+            }
+          ]);
+        }, 500);
+      } else {
+       
+        // First box
+        setThinkBoxes([{
+          id: thinkId.current++,
+          text: newText.trim(),
+          isVisible: true
+        }]);
+      }
+    } else {
+      // Update the last box's text
+      setThinkBoxes(prev => prev.map((box, i) =>
+        i === prev.length - 1 ? { ...box, text: newText.trim() } : box
+      ));
+    }
   }
 
   const handleSummarize = async () => {
     setLoading(true);
     setError(null);
     setSummary("");
-    setThinking(null);
+    setThinkBoxes([]);
     thinkId.current = 0;
+
     try {
       const ollamaUrl = "http://localhost:11434/api/generate";
       const model = "deepseek-r1:1.5b";
       const prompt = `Summarize the following text in a few bullet points or key sentences. If you need to think step by step, enclose your thoughts in <think>...</think> tags. Only put the final summary outside <think> tags.\n\n${text}`;
+
       const res = await fetch(ollamaUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ model, prompt, stream: true })
       });
+
       if (!res.ok) throw new Error("Failed to connect to Ollama");
+
       const reader = res.body.getReader();
       let decoder = new TextDecoder();
       let doneReading = false;
-      let inThink = false;
-      let thinkBuffer = "";
-      let summaryBuffer = "";
-      let thinkParagraph = "";
-      let lastChar = "";
-      let afterThink = false;
+      let currentThinkContent = "";
+      let summaryContent = "";
+      let isFirstChunk = true;
+      let isInThinkTag = false;
       let startedWithThink = false;
-      let firstNonWhitespaceSeen = false;
-      let thinkTagStarted = false;
+      let lastResponse = "";
+      let summaryStarted = false;
+
       while (!doneReading) {
         const { value, done } = await reader.read();
         doneReading = done;
+
         if (value) {
           const chunk = decoder.decode(value, { stream: true });
-          chunk.split(/\n/).forEach(line => {
-            if (!line.trim()) return;
+          const lines = chunk.split('\n');
+
+          for (const line of lines) {
+            if (!line.trim()) continue;
+
             try {
-              const obj = JSON.parse(line);
-              if (obj.response !== undefined) {
-                let chars = decodeHTMLEntities(obj.response);
-                for (let i = 0; i < chars.length; ++i) {
-                  const c = chars[i];
-                  if (!firstNonWhitespaceSeen && /\S/.test(c)) {
-                    firstNonWhitespaceSeen = true;
-                    if (c === '<' && chars.slice(i, i+6) === '<think>') {
-                      startedWithThink = true;
-                      thinkTagStarted = true;
-                    }
-                  }
-                  thinkBuffer += c;
-                  if (!inThink && thinkBuffer.endsWith('<think>')) {
-                    inThink = true;
-                    thinkBuffer = "";
-                    thinkParagraph = "";
-                    afterThink = false;
-                    thinkTagStarted = false;
-                  } else if (inThink && thinkBuffer.endsWith('</think>')) {
-                    if (thinkParagraph.trim()) {
-                      replaceThinkBubble(thinkParagraph);
-                    }
-                    inThink = false;
-                    thinkBuffer = "";
-                    thinkParagraph = "";
-                    afterThink = true;
-                  } else if (inThink) {
-                    if (
-                      thinkBuffer.endsWith('\n\n') ||
-                      (lastChar === '\n' && c === '\n')
-                    ) {
-                      const para = thinkParagraph.replace(/\n+$/, "");
-                      if (para.trim()) {
-                        replaceThinkBubble(para);
-                      }
-                      thinkParagraph = "";
-                      thinkBuffer = "";
-                    } else {
-                      thinkParagraph += c;
-                      updateThinkText(c);
-                    }
-                  } else if (!inThink) {
-                    if (afterThink) {
-                      if (c === '\n') {
-                      } else {
-                        afterThink = false;
-                        if (!(startedWithThink && !summaryBuffer.trim() && (c === '<' || thinkTagStarted))) {
-                          summaryBuffer += c;
-                        }
-                        thinkTagStarted = false;
-                      }
-                    } else {
-                      if (!(startedWithThink && !summaryBuffer.trim() && (c === '<' || thinkTagStarted))) {
-                        summaryBuffer += c;
-                      }
-                      thinkTagStarted = false;
-                    }
-                  }
-                  lastChar = c;
+              const { response } = JSON.parse(line);
+              if (!response) continue;
+
+              const decodedResponse = decodeHTMLEntities(response);
+              lastResponse = decodedResponse;
+
+              if (isFirstChunk) {
+                isFirstChunk = false;
+                if (decodedResponse.trimStart().startsWith('<think>')) {
+                  startedWithThink = true;
+                  isInThinkTag = true;
                 }
-                setSummary(summaryBuffer);
               }
-            } catch (e) {}
-          });
+
+              const parts = decodedResponse.split(/(<\/?think>)/g);
+
+              for (const part of parts) {
+                if (part === '<think>') {
+                  isInThinkTag = true;
+                  currentThinkContent = "";
+                  updateThinkBoxes("", true);
+                  continue;
+                }
+
+                if (part === '</think>') {
+                  isInThinkTag = false;
+                  continue;
+                }
+
+                if (isInThinkTag) {
+                  currentThinkContent += part;
+                  updateThinkBoxes(currentThinkContent);
+
+                  if (part.includes('\n\n') || lastResponse.endsWith('\n\n')) {
+                    currentThinkContent = "";
+                    updateThinkBoxes("", true);
+                  }
+                } else {
+                  if (!summaryStarted && part.trim()) {
+                    summaryStarted = true;
+                    // Fade out all think boxes
+                    setThinkBoxes(prev => prev.map(box => ({ ...box, isVisible: false })));
+                    timeoutRef.current = setTimeout(() => {
+                      setThinkBoxes([]);
+                    }, 500);
+                  }
+
+                  if (!(startedWithThink && summaryContent.length === 0 && part.trim().startsWith('<'))) {
+                    summaryContent += part;
+                    if (summaryContent.trim()) {
+                      setSummary(summaryContent.trim());
+                    }
+                  }
+                }
+              }
+            } catch (e) {
+              console.error("Error processing chunk:", e);
+            }
+          }
         }
       }
-      let cleanSummary = summaryBuffer
-        .replace(/<think>[\s\S]*?<\/think>/gi, '')
-        .replace(/<\/?think>/gi, '')
-        .replace(/^[-\s]+|[-\s]+$/g, '')
-        .trim();
-      setSummary(cleanSummary);
-      setThinking(null);
+
     } catch (e) {
       setError(e.message);
     } finally {
       setLoading(false);
     }
   };
+
+  const ThinkBox = ({ text, isVisible }) => (
+    <Paper
+      style={{
+        background: '#f3f4f6',
+        color: '#6d28d9',
+        borderRadius: 10,
+        padding: 18,
+        marginBottom: 16,
+        opacity: isVisible ? 1 : 0,
+        transform: `translateY(${isVisible ? 0 : 20}px)`,
+        transition: 'all 500ms ease-in-out',
+        position: 'relative',
+        overflow: 'hidden'
+      }}
+    >
+      <div style={{
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        width: '100%',
+        height: '2px',
+        background: 'linear-gradient(90deg, #6d28d9 0%, #9333ea 50%, #6d28d9 100%)',
+        backgroundSize: '200% 100%',
+        animation: 'thinking 1.5s linear infinite'
+      }} />
+      <div style={{
+        fontSize: '0.9rem',
+        color: '#6d28d9',
+        marginBottom: '8px',
+        opacity: 0.8,
+        fontStyle: 'italic'
+      }}>
+        Thinking...
+      </div>
+      <ReactMarkdown>{text}</ReactMarkdown>
+    </Paper>
+  );
 
   return (
     <div style={{ maxWidth: 600, margin: '40px auto', padding: 24 }}>
@@ -168,16 +239,38 @@ export default function Summarizer() {
         {loading ? "Summarizing..." : "Summarize"}
       </Button>
       {error && <Paper style={{ color: '#dc2626', background: '#fef2f2', borderRadius: 6, padding: 10, marginBottom: 12, textAlign: 'center' }}>{error}</Paper>}
-      {thinking && (
-        <Paper style={{ background: '#f3f4f6', color: '#6d28d9', borderRadius: 10, padding: 18, marginBottom: 16 }}>
-          <ReactMarkdown>{thinking.text}</ReactMarkdown>
-        </Paper>
-      )}
+      <TransitionGroup>
+        {thinkBoxes.map((box) => (
+          <Collapse key={box.id}>
+            <ThinkBox text={box.text} isVisible={box.isVisible} />
+
+          </Collapse>
+        ))}
+      </TransitionGroup>
       {summary && (
-        <Paper style={{ background: '#fff', color: '#1e293b', borderRadius: 10, padding: 24, marginTop: 12 }}>
+        <Paper
+          style={{
+            background: '#fff',
+            color: '#1e293b',
+            borderRadius: 10,
+            padding: 24,
+            marginTop: 12,
+            opacity: summary ? 1 : 0,
+            transform: `translateY(${summary ? 0 : 20}px)`,
+            transition: 'all 500ms ease-in-out'
+          }}
+        >
           <ReactMarkdown>{summary}</ReactMarkdown>
         </Paper>
       )}
+      <style>
+        {`
+          @keyframes thinking {
+            0% { background-position: 100% 0; }
+            100% { background-position: -100% 0; }
+          }
+        `}
+      </style>
     </div>
   );
 }  
