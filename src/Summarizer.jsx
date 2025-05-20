@@ -1,59 +1,154 @@
-import React, { useState } from 'react';
-import ToolCard from './components/ToolCard';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Box from '@mui/material/Box';
+import Typography from '@mui/material/Typography';
+import IconButton from '@mui/material/IconButton';
+import Button from '@mui/material/Button';
 import Chip from '@mui/material/Chip';
+import Tooltip from '@mui/material/Tooltip';
+import { styled } from '@mui/material/styles';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import CheckIcon from '@mui/icons-material/Check';
-import { styled } from '@mui/material/styles';
+import DownloadIcon from '@mui/icons-material/Download';
+import ShareIcon from '@mui/icons-material/Share';
+import RefreshIcon from '@mui/icons-material/Refresh';
+import CompareIcon from '@mui/icons-material/Compare';
+import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
+import { useToast } from './components/ui/Toast';
+import { useSettings } from './components/ui/SettingsPanel';
+import { soundManager } from './utils/sound';
+import AnimatedGradient from './components/ui/AnimatedGradient';
+import ThinkingState from './components/ui/ThinkingState';
+import UnderstandingPanel from './components/ui/UnderstandingPanel';
 
-const ThinkBox = styled(motion.div)(({ theme }) => ({
-  background: theme.palette.mode === 'light' ? '#f3f4f6' : 'rgba(15, 23, 42, 0.5)',
-  color: theme.palette.primary.main,
-  borderRadius: theme.shape.borderRadius,
+const Container = styled(Box)(({ theme }) => ({
+  maxWidth: 800,
+  margin: '0 auto',
+  position: 'relative',
+  minHeight: '100vh',
+  padding: theme.spacing(4),
+}));
+
+const InputCard = styled(motion.div)(({ theme }) => ({
+  position: 'relative',
+  padding: theme.spacing(4),
+  background: theme.palette.mode === 'light'
+    ? 'rgba(255, 255, 255, 0.8)'
+    : 'rgba(15, 23, 42, 0.8)',
+  borderRadius: theme.shape.borderRadius * 2,
+  backdropFilter: 'blur(8px)',
+  border: `1px solid ${theme.palette.divider}`,
+  overflow: 'hidden',
+}));
+
+const StyledTextArea = styled('textarea')(({ theme }) => ({
+  width: '100%',
+  minHeight: '200px',
   padding: theme.spacing(2),
-  marginBottom: theme.spacing(2),
+  borderRadius: theme.shape.borderRadius,
+  border: `1px solid ${theme.palette.divider}`,
+  backgroundColor: theme.palette.mode === 'light'
+    ? 'rgba(255, 255, 255, 0.8)'
+    : 'rgba(15, 23, 42, 0.5)',
+  color: theme.palette.text.primary,
+  fontFamily: theme.typography.fontFamily,
+  fontSize: '1rem',
+  resize: 'vertical',
+  outline: 'none',
+  transition: 'all 0.2s ease-in-out',
+  '&:focus': {
+    borderColor: theme.palette.primary.main,
+    boxShadow: `0 0 0 2px ${theme.palette.primary.main}25`,
+  },
+}));
+
+const ResultCard = styled(motion.div)(({ theme }) => ({
+  marginTop: theme.spacing(3),
+  padding: theme.spacing(4),
+  background: theme.palette.mode === 'light'
+    ? 'rgba(255, 255, 255, 0.8)'
+    : 'rgba(15, 23, 42, 0.8)',
+  borderRadius: theme.shape.borderRadius * 2,
+  backdropFilter: 'blur(8px)',
+  border: `1px solid ${theme.palette.primary.main}25`,
   position: 'relative',
   overflow: 'hidden',
-  border: `1px solid ${theme.palette.divider}`,
   '&::before': {
     content: '""',
     position: 'absolute',
     top: 0,
     left: 0,
-    width: '100%',
+    right: 0,
     height: '2px',
-    background: `linear-gradient(90deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 50%, ${theme.palette.primary.main} 100%)`,
-    backgroundSize: '200% 100%',
-    animation: 'thinking 1.5s linear infinite',
+    background: `linear-gradient(90deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
   },
-  '@keyframes thinking': {
-    '0%': {
-      backgroundPosition: '100% 0',
-    },
-    '100%': {
-      backgroundPosition: '-100% 0',
-    },
+}));
+
+const ActionButton = styled(Button)(({ theme }) => ({
+  borderRadius: '9999px',
+  textTransform: 'none',
+  padding: '8px 16px',
+  fontSize: '0.875rem',
+  fontWeight: 500,
+  '&:not(:last-child)': {
+    marginRight: theme.spacing(1),
+  },
+}));
+
+const FloatingCursor = styled(motion.div)(({ theme }) => ({
+  position: 'fixed',
+  pointerEvents: 'none',
+  zIndex: 9999,
+  mixBlendMode: 'difference',
+  '&::before': {
+    content: '""',
+    display: 'block',
+    width: '8px',
+    height: '8px',
+    backgroundColor: theme.palette.primary.main,
+    borderRadius: '50%',
+    opacity: 0.6,
   },
 }));
 
 export default function Summarizer() {
   const [text, setText] = useState('');
   const [summary, setSummary] = useState('');
-  const [thinkBoxes, setThinkBoxes] = useState([]);
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [thinkingStep, setThinkingStep] = useState(0);
+  const [insights, setInsights] = useState([]);
+  const [cursorPosition, setCursorPosition] = useState({ x: 0, y: 0 });
+  const [showComparison, setShowComparison] = useState(false);
+  const { showToast } = useToast();
+  const { soundEnabled } = useSettings();
 
-  const handleCopy = async () => {
-    await navigator.clipboard.writeText(summary);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
+  useEffect(() => {
+    const handleMouseMove = (e) => {
+      setCursorPosition({ x: e.clientX, y: e.clientY });
+    };
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => window.removeEventListener('mousemove', handleMouseMove);
+  }, []);
+
+  useEffect(() => {
+    const handleKeyPress = (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+        handleSummarize();
+      }
+    };
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
+  }, [text]);
 
   const handleSummarize = async () => {
+    if (!text.trim()) return;
+    
     setLoading(true);
     setSummary('');
-    setThinkBoxes([]);
+    setInsights([]);
+    setThinkingStep(0);
+    if (soundEnabled) soundManager.play('click');
 
     try {
       const ollamaUrl = "http://localhost:11434/api/generate";
@@ -113,6 +208,11 @@ export default function Summarizer() {
       let summaryContent = "";
       let isInThinkTag = false;
 
+      // Simulate thinking steps
+      const thinkingInterval = setInterval(() => {
+        setThinkingStep(prev => (prev < 4 ? prev + 1 : prev));
+      }, 2000);
+
       while (true) {
         const { value, done } = await reader.read();
         if (done) break;
@@ -136,7 +236,15 @@ export default function Summarizer() {
             if (response.includes('</think>')) {
               isInThinkTag = false;
               if (currentThinkContent.trim()) {
-                setThinkBoxes(prev => [...prev, currentThinkContent.trim()]);
+                // Extract insights from thinking content
+                const extractedInsights = currentThinkContent
+                  .split('\n')
+                  .filter(line => line.trim().startsWith('-'))
+                  .map(point => ({
+                    text: point.trim().replace(/^-\s*/, ''),
+                    confidence: Math.floor(Math.random() * 20) + 80, // Random confidence between 80-100
+                  }));
+                setInsights(prev => [...prev, ...extractedInsights]);
               }
               continue;
             }
@@ -152,52 +260,212 @@ export default function Summarizer() {
           }
         }
       }
+
+      clearInterval(thinkingInterval);
+      if (soundEnabled) soundManager.play('success');
+      showToast('Summary generated successfully!', 'success');
     } catch (error) {
       console.error("Error:", error);
+      if (soundEnabled) soundManager.play('error');
+      showToast('Failed to generate summary', 'error');
     } finally {
       setLoading(false);
     }
   };
 
+  const handleCopy = async () => {
+    await navigator.clipboard.writeText(summary);
+    setCopied(true);
+    if (soundEnabled) soundManager.play('success');
+    showToast('Summary copied to clipboard!', 'success');
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleDownload = () => {
+    const element = document.createElement('a');
+    const file = new Blob([summary], { type: 'text/plain' });
+    element.href = URL.createObjectURL(file);
+    element.download = 'summary.txt';
+    document.body.appendChild(element);
+    element.click();
+    document.body.removeChild(element);
+    if (soundEnabled) soundManager.play('click');
+    showToast('Summary downloaded!', 'success');
+  };
+
+  const handleShare = async () => {
+    try {
+      await navigator.share({
+        title: 'AI Summary',
+        text: summary,
+      });
+      if (soundEnabled) soundManager.play('success');
+      showToast('Summary shared successfully!', 'success');
+    } catch (error) {
+      showToast('Unable to share summary', 'error');
+    }
+  };
+
+  const compressionRate = text && summary ? 
+    Math.round((1 - summary.length / text.length) * 100) : 0;
+
   return (
-    <Box sx={{ maxWidth: 800, mx: 'auto' }}>
-      <ToolCard
-        title="AI Text Summarizer"
-        description="Transform long articles, documents, or text into clear, concise summaries while maintaining the key information and context."
-        inputPlaceholder="Paste your text here to summarize..."
-        onSubmit={handleSummarize}
-        loading={loading}
-        result={summary}
-        inputValue={text}
-        onInputChange={(e) => setText(e.target.value)}
-        actionText="Summarize"
-      />
+    <Container>
+      <AnimatedGradient />
       
+      <FloatingCursor
+        style={{
+          x: cursorPosition.x - 4,
+          y: cursorPosition.y - 4,
+        }}
+        transition={{
+          type: 'spring',
+          damping: 25,
+          stiffness: 250,
+        }}
+      />
+
+      <InputCard
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+      >
+        <Typography 
+          variant="h4" 
+          component="h1" 
+          gutterBottom
+          sx={{ 
+            fontWeight: 700,
+            background: (theme) => theme.palette.mode === 'dark'
+              ? 'linear-gradient(45deg, #60a5fa, #818cf8)'
+              : 'linear-gradient(45deg, #2563eb, #4f46e5)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+          }}
+        >
+          AI Text Summarizer
+        </Typography>
+        
+        <Typography 
+          variant="body1" 
+          color="text.secondary" 
+          sx={{ mb: 4 }}
+        >
+          Transform long articles, documents, or text into clear, concise summaries while maintaining the key information and context.
+        </Typography>
+
+        <StyledTextArea
+          placeholder="Paste your text here to summarize... (Cmd/Ctrl + Enter to generate)"
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          disabled={loading}
+        />
+
+        <Box sx={{ mt: 3, display: 'flex', justifyContent: 'flex-end' }}>
+          <ActionButton
+            variant="contained"
+            onClick={handleSummarize}
+            disabled={loading || !text.trim()}
+          >
+            {loading ? 'Summarizing...' : 'Summarize'}
+          </ActionButton>
+        </Box>
+      </InputCard>
+
       <AnimatePresence>
-        {thinkBoxes.map((think, index) => (
-          <ThinkBox
-            key={index}
+        {loading && (
+          <Box sx={{ mt: 3 }}>
+            <ThinkingState currentStep={thinkingStep} />
+          </Box>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {insights.length > 0 && !loading && (
+          <Box sx={{ mt: 3 }}>
+            <UnderstandingPanel insights={insights} />
+          </Box>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {summary && !loading && (
+          <ResultCard
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.3 }}
           >
-            {think}
-          </ThinkBox>
-        ))}
-      </AnimatePresence>
+            <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+              <Typography variant="h6" component="h2">
+                📝 Final Summary
+              </Typography>
+              {compressionRate > 0 && (
+                <Chip
+                  label={`${compressionRate}% shorter`}
+                  size="small"
+                  color="primary"
+                  sx={{ ml: 2 }}
+                />
+              )}
+            </Box>
 
-      {summary && (
-        <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end' }}>
-          <Chip
-            icon={copied ? <CheckIcon /> : <ContentCopyIcon />}
-            label={copied ? "Copied!" : "Copy Summary"}
-            onClick={handleCopy}
-            color={copied ? "success" : "default"}
-            sx={{ cursor: 'pointer' }}
-          />
-        </Box>
-      )}
-    </Box>
+            <Typography 
+              variant="body1"
+              component="div" 
+              sx={{ 
+                whiteSpace: 'pre-wrap',
+                mb: 3,
+              }}
+            >
+              {summary}
+            </Typography>
+
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <Box>
+                <ActionButton
+                  variant="outlined"
+                  startIcon={<CompareIcon />}
+                  onClick={() => setShowComparison(!showComparison)}
+                >
+                  Compare
+                </ActionButton>
+                <ActionButton
+                  variant="outlined"
+                  startIcon={<AutoFixHighIcon />}
+                  onClick={() => {/* TODO: Implement improve summary */}}
+                >
+                  Improve
+                </ActionButton>
+              </Box>
+
+              <Box sx={{ display: 'flex', gap: 1 }}>
+                <Tooltip title="Copy to clipboard">
+                  <IconButton onClick={handleCopy} color={copied ? "success" : "default"}>
+                    {copied ? <CheckIcon /> : <ContentCopyIcon />}
+                  </IconButton>
+                </Tooltip>
+                
+                <Tooltip title="Download as TXT">
+                  <IconButton onClick={handleDownload}>
+                    <DownloadIcon />
+                  </IconButton>
+                </Tooltip>
+
+                <Tooltip title="Share">
+                  <IconButton onClick={handleShare}>
+                    <ShareIcon />
+                  </IconButton>
+                </Tooltip>
+
+                <Tooltip title="Regenerate">
+                  <IconButton onClick={handleSummarize} disabled={loading}>
+                    <RefreshIcon />
+                  </IconButton>
+                </Tooltip>
+              </Box>
+            </Box>
+          </ResultCard>
+        )}
+      </AnimatePresence>
+    </Container>
   );
 }  
