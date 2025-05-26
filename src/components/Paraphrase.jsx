@@ -8,18 +8,25 @@ import {
   TextField,
   Button,
   CircularProgress,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
+  ToggleButton,
+  ToggleButtonGroup,
+  Stack,
+  Alert,
+  Divider,
 } from '@mui/material';
 
 export default function Paraphrase() {
   const [text, setText] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [result, setResult] = useState('');
-  const [style, setStyle] = useState('standard');
+  const [result, setResult] = useState(null);
+  const [style, setStyle] = useState('all');
+
+  const handleStyleChange = (event, newStyle) => {
+    if (newStyle !== null) {
+      setStyle(newStyle);
+    }
+  };
 
   const handleParaphrase = async () => {
     if (!text.trim()) return;
@@ -28,7 +35,7 @@ export default function Paraphrase() {
     setError(null);
 
     try {
-      const response = await fetch('http://localhost:5000/api/paraphrase/generate', {
+      const response = await fetch('http://localhost:5000/api/paraphrase/rewrite', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -41,7 +48,10 @@ export default function Paraphrase() {
 
       const data = await response.json();
       if (data.success) {
-        setResult(data.paraphrased_text);
+        const parsedResult = typeof data.result === 'string' 
+          ? JSON.parse(data.result) 
+          : data.result;
+        setResult(parsedResult);
       } else {
         throw new Error(data.error || 'Paraphrasing failed');
       }
@@ -52,6 +62,99 @@ export default function Paraphrase() {
     }
   };
 
+  const renderResult = () => {
+    if (!result) return null;
+    if (error) {
+      return (
+        <Alert severity="error" sx={{ mt: 2 }}>
+          {error}
+        </Alert>
+      );
+    }
+
+    return (
+      <Stack spacing={3}>
+        {style === 'all' ? (
+          <>
+            {result.casual && (
+              <Box>
+                <Typography variant="h6" gutterBottom sx={{ color: 'text.secondary' }}>
+                  Casual Version
+                </Typography>
+                <Paper
+                  sx={{
+                    p: 2,
+                    bgcolor: 'background.paper',
+                    borderRadius: 1,
+                    border: '1px solid',
+                    borderColor: 'divider',
+                  }}
+                >
+                  <Typography variant="body1">{result.casual}</Typography>
+                </Paper>
+              </Box>
+            )}
+
+            {result.formal && (
+              <Box>
+                <Typography variant="h6" gutterBottom sx={{ color: 'text.secondary' }}>
+                  Formal Version
+                </Typography>
+                <Paper
+                  sx={{
+                    p: 2,
+                    bgcolor: 'background.paper',
+                    borderRadius: 1,
+                    border: '1px solid',
+                    borderColor: 'divider',
+                  }}
+                >
+                  <Typography variant="body1">{result.formal}</Typography>
+                </Paper>
+              </Box>
+            )}
+
+            {result.creative && (
+              <Box>
+                <Typography variant="h6" gutterBottom sx={{ color: 'text.secondary' }}>
+                  Creative Version
+                </Typography>
+                <Paper
+                  sx={{
+                    p: 2,
+                    bgcolor: 'background.paper',
+                    borderRadius: 1,
+                    border: '1px solid',
+                    borderColor: 'divider',
+                  }}
+                >
+                  <Typography variant="body1">{result.creative}</Typography>
+                </Paper>
+              </Box>
+            )}
+          </>
+        ) : (
+          <Box>
+            <Typography variant="h6" gutterBottom sx={{ color: 'text.secondary' }}>
+              {style.charAt(0).toUpperCase() + style.slice(1)} Version
+            </Typography>
+            <Paper
+              sx={{
+                p: 2,
+                bgcolor: 'background.paper',
+                borderRadius: 1,
+                border: '1px solid',
+                borderColor: 'divider',
+              }}
+            >
+              <Typography variant="body1">{result[style]}</Typography>
+            </Paper>
+          </Box>
+        )}
+      </Stack>
+    );
+  };
+
   return (
     <ToolPage
       title="AI Paraphraser"
@@ -60,7 +163,30 @@ export default function Paraphrase() {
     >
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
         <Paper sx={{ p: 3 }}>
-          <Typography variant="subtitle2" gutterBottom>
+          <Box mb={3}>
+            <ToggleButtonGroup
+              value={style}
+              exclusive
+              onChange={handleStyleChange}
+              aria-label="text style"
+              sx={{ mb: 2 }}
+            >
+              <ToggleButton value="all" aria-label="all styles">
+                All Styles
+              </ToggleButton>
+              <ToggleButton value="casual" aria-label="casual">
+                Casual
+              </ToggleButton>
+              <ToggleButton value="formal" aria-label="formal">
+                Formal
+              </ToggleButton>
+              <ToggleButton value="creative" aria-label="creative">
+                Creative
+              </ToggleButton>
+            </ToggleButtonGroup>
+          </Box>
+
+          <Typography variant="subtitle2" gutterBottom sx={{ color: 'text.secondary' }}>
             Original Text
           </Typography>
           <TextField
@@ -71,30 +197,16 @@ export default function Paraphrase() {
             onChange={(e) => setText(e.target.value)}
             placeholder="Enter text to paraphrase..."
             disabled={loading}
+            sx={{ mb: 3 }}
           />
 
-          <FormControl fullWidth sx={{ mt: 3 }}>
-            <InputLabel>Writing Style</InputLabel>
-            <Select
-              value={style}
-              onChange={(e) => setStyle(e.target.value)}
-              label="Writing Style"
-            >
-              <MenuItem value="standard">Standard</MenuItem>
-              <MenuItem value="formal">Formal</MenuItem>
-              <MenuItem value="simple">Simple</MenuItem>
-              <MenuItem value="creative">Creative</MenuItem>
-              <MenuItem value="professional">Professional</MenuItem>
-            </Select>
-          </FormControl>
-
           {error && (
-            <Typography color="error" sx={{ mt: 2 }}>
+            <Alert severity="error" sx={{ mb: 3 }}>
               {error}
-            </Typography>
+            </Alert>
           )}
 
-          <Box sx={{ mt: 3, display: 'flex', justifyContent: 'flex-end' }}>
+          <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
             <Button
               variant="contained"
               onClick={handleParaphrase}
@@ -108,16 +220,11 @@ export default function Paraphrase() {
 
         {result && (
           <Paper sx={{ p: 3 }}>
-            <Typography variant="subtitle2" gutterBottom>
-              Paraphrased Text
+            <Typography variant="h5" gutterBottom>
+              Paraphrased Versions
             </Typography>
-            <TextField
-              fullWidth
-              multiline
-              rows={6}
-              value={result}
-              InputProps={{ readOnly: true }}
-            />
+            <Divider sx={{ mb: 3 }} />
+            {renderResult()}
           </Paper>
         )}
       </Box>
