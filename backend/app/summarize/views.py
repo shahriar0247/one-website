@@ -1,0 +1,1 @@
+# This file is no longer needed as summarization is now handled directly in the frontend. 

@@ -1,0 +1,51 @@
+{
+  "filename": "desktop_switcher",
+  "exportVersion": 1,
+  "value": {
+    "name": "desktop_switcher",
+    "value": -1,
+    "content": {
+      "MetaLeft": {
+        "targetIndex": -1,
+        "data": [
+          {
+            "inputName": "MetaLeft",
+            "startTime": 0,
+            "endTime": 300
+          }
+        ]
+      },
+      "ControlLeft": {
+        "targetIndex": -1,
+        "data": [
+          {
+            "inputName": "ControlLeft",
+            "startTime": 10,
+            "endTime": 300
+          }
+        ]
+      },
+      "ArrowLeft": {
+        "targetIndex": -1,
+        "data": [
+          {
+            "inputName": "ArrowLeft",
+            "startTime": 20,
+            "endTime": 100
+          }
+        ]
+      },
+      "ArrowRight": {
+        "targetIndex": -1,
+        "data": [
+          {
+            "inputName": "ArrowRight",
+            "startTime": 20,
+            "endTime": 100
+          }
+        ]
+      }
+    },
+    "m_Identifier": "desktop_switch"
+  }
+} 
