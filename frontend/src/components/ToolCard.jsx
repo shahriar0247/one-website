@@ -44,19 +44,19 @@ export default function ToolCard({
           {/* Header */}
           <div className="mb-8">
             <h1 className="text-4xl lg:text-5xl font-bold mb-4 gradient-text">
-              {title}
+            {title}
             </h1>
             <p className="text-lg text-gray-600 dark:text-gray-400 leading-relaxed">
-              {description}
+            {description}
             </p>
           </div>
 
           {/* Input Section */}
           <div className="mb-6">
             <textarea
-              placeholder={inputPlaceholder}
-              value={inputValue}
-              onChange={onInputChange}
+            placeholder={inputPlaceholder}
+            value={inputValue}
+            onChange={onInputChange}
               className={cn(
                 "w-full min-h-[200px] p-4 rounded-xl border transition-all duration-200",
                 "bg-white dark:bg-gray-900 border-gray-300 dark:border-gray-700",
@@ -129,7 +129,7 @@ export default function ToolCard({
                 <div className="prose dark:prose-invert max-w-none">
                   {typeof result === 'string' ? (
                     <pre className="whitespace-pre-wrap font-sans text-sm leading-relaxed text-gray-900 dark:text-gray-100">
-                      {result}
+                {result}
                     </pre>
                   ) : (
                     result

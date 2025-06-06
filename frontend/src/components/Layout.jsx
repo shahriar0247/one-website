@@ -22,6 +22,9 @@ const navigation = [
     name: 'Text Tools', 
     icon: DocumentTextIcon,
     children: [
+      { name: 'Text Case Converter', href: '/text-case-converter' },
+      { name: 'JSON Formatter', href: '/json-formatter' },
+      { name: 'URL Encoder', href: '/url-encoder' },
       { name: 'Grammar Checker', href: '/grammar-checker' },
       { name: 'Case Converter', href: '/case-converter' },
       { name: 'Paraphraser', href: '/paraphrase' },
@@ -51,6 +54,9 @@ const navigation = [
     name: 'Productivity', 
     icon: WrenchScrewdriverIcon,
     children: [
+      { name: 'Password Generator', href: '/password-generator' },
+      { name: 'QR Code Generator', href: '/qr-code-generator' },
+      { name: 'Hash Generator', href: '/hash-generator' },
       { name: 'Color Picker', href: '/color-picker' },
       { name: 'QR Generator', href: '/qr-generator' },
       { name: 'Unit Converter', href: '/unit-converter' },
@@ -322,7 +328,7 @@ export default function Layout({ children }) {
       <div className="lg:pl-72">
         <main className="py-8">
           <div className="px-4 sm:px-6 lg:px-8">
-            {children}
+        {children}
           </div>
         </main>
       </div>

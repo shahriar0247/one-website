@@ -134,7 +134,7 @@ export default function ColorPicker() {
                 <div className="flex items-center mb-4">
                   <EyeDropperIcon className="w-5 h-5 mr-2 text-gray-600 dark:text-gray-400" />
                   <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
-                    Color Picker
+              Color Picker
                   </h3>
                 </div>
                 
@@ -154,10 +154,10 @@ export default function ColorPicker() {
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       HEX Value
                     </label>
-                    <HexColorInput
-                      color={color}
-                      onChange={setColor}
-                      prefixed
+              <HexColorInput
+                color={color}
+                onChange={setColor}
+                prefixed
                       className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500 font-mono"
                     />
                   </div>
@@ -171,7 +171,7 @@ export default function ColorPicker() {
                       className="w-full h-20 rounded-lg border border-gray-300 dark:border-gray-700 shadow-inner"
                       whileHover={{ scale: 1.02 }}
                       transition={{ duration: 0.2 }}
-                    />
+              />
                   </div>
                 </div>
               </div>
@@ -229,7 +229,7 @@ export default function ColorPicker() {
                       <div className="flex items-center justify-between mb-1">
                         <div>
                           <span className="text-sm font-semibold text-gray-900 dark:text-gray-100">
-                            {label}
+                    {label}
                           </span>
                           <span className="text-xs text-gray-500 dark:text-gray-400 ml-2">
                             {description}
@@ -242,7 +242,7 @@ export default function ColorPicker() {
                           value={value}
                           readOnly
                           className="flex-1 px-3 py-2 text-sm bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg font-mono text-gray-900 dark:text-gray-100 focus:outline-none"
-                        />
+                    />
                         <motion.button
                           onClick={() => handleCopy(value, label)}
                           className={cn(
@@ -253,7 +253,7 @@ export default function ColorPicker() {
                           )}
                           whileHover={{ scale: 1.05 }}
                           whileTap={{ scale: 0.95 }}
-                        >
+                    >
                           <AnimatePresence mode="wait">
                             {copiedFormat === label ? (
                               <motion.div

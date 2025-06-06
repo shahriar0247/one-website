@@ -61,7 +61,7 @@ export default function Paraphrase() {
               </p>
             </div>
           </div>
-        )}
+            )}
 
         {result.alternatives && result.alternatives.length > 0 && (
           <div>

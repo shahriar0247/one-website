@@ -15,7 +15,7 @@ export default function QrGenerator() {
 
   const generateQR = async () => {
     if (!text.trim()) return;
-    
+
     setLoading(true);
     try {
       const dataURL = await QRCode.toDataURL(text, {
@@ -44,7 +44,7 @@ export default function QrGenerator() {
 
   const downloadQR = () => {
     if (!qrDataURL) return;
-    
+
     const link = document.createElement('a');
     link.download = 'qrcode.png';
     link.href = qrDataURL;
@@ -104,8 +104,8 @@ export default function QrGenerator() {
                     </label>
                     <div className="relative">
                       <textarea
-                        value={text}
-                        onChange={(e) => setText(e.target.value)}
+                value={text}
+                onChange={(e) => setText(e.target.value)}
                         placeholder="Enter text, URL, or any content for the QR code..."
                         className="w-full h-32 px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none"
                       />
@@ -142,7 +142,7 @@ export default function QrGenerator() {
                         value={size}
                         onChange={(e) => setSize(Number(e.target.value))}
                         className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500"
-                      >
+                >
                         <option value={128}>128px</option>
                         <option value={256}>256px</option>
                         <option value={512}>512px</option>
@@ -248,7 +248,7 @@ export default function QrGenerator() {
                     >
                       <img
                         src={qrDataURL}
-                        alt="Generated QR Code"
+                    alt="Generated QR Code"
                         className="max-w-full h-auto mx-auto rounded-lg shadow-lg"
                       />
                       <p className="text-sm text-gray-600 dark:text-gray-400 mt-4">

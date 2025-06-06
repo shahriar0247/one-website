@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { motion } from 'framer-motion';
+import React, { useState, useEffect } from 'react';
+import { motion, useScroll, useTransform } from 'framer-motion';
 import { 
   MagnifyingGlassIcon, 
   DocumentTextIcon,
@@ -7,7 +7,10 @@ import {
   CpuChipIcon,
   WrenchScrewdriverIcon,
   SparklesIcon,
-  ArrowRightIcon
+  ArrowRightIcon,
+  ChartBarIcon,
+  UserGroupIcon,
+  ClockIcon
 } from '@heroicons/react/24/outline';
 import { Link } from 'react-router-dom';
 import { cn } from '../utils/cn';
@@ -18,6 +21,9 @@ const tools = [
     icon: DocumentTextIcon,
     color: 'from-blue-500 to-cyan-500',
     tools: [
+      { name: 'Text Case Converter', path: '/text-case-converter', description: 'Convert text between different cases' },
+      { name: 'JSON Formatter', path: '/json-formatter', description: 'Format and validate JSON data' },
+      { name: 'URL Encoder', path: '/url-encoder', description: 'Encode and decode URLs and Base64' },
       { name: 'Grammar Checker', path: '/grammar-checker', description: 'Check and improve your writing' },
       { name: 'Case Converter', path: '/case-converter', description: 'Convert text between different cases' },
       { name: 'Paraphraser', path: '/paraphrase', description: 'Rewrite text while keeping meaning' },
@@ -50,6 +56,9 @@ const tools = [
     icon: WrenchScrewdriverIcon,
     color: 'from-orange-500 to-red-500',
     tools: [
+      { name: 'Password Generator', path: '/password-generator', description: 'Generate secure passwords' },
+      { name: 'QR Code Generator', path: '/qr-code-generator', description: 'Generate QR codes instantly' },
+      { name: 'Hash Generator', path: '/hash-generator', description: 'Generate secure hash values' },
       { name: 'Color Picker', path: '/color-picker', description: 'Pick and generate color palettes' },
       { name: 'QR Generator', path: '/qr-generator', description: 'Generate QR codes instantly' },
       { name: 'Unit Converter', path: '/unit-converter', description: 'Convert between different units' },
@@ -79,9 +88,42 @@ const itemVariants = {
   }
 };
 
+// Add new statistics section
+const stats = [
+  { name: 'Active Users', value: '50K+', icon: UserGroupIcon },
+  { name: 'Tools Available', value: '20+', icon: WrenchScrewdriverIcon },
+  { name: 'Files Processed', value: '1M+', icon: ChartBarIcon },
+  { name: 'Average Processing Time', value: '<2s', icon: ClockIcon },
+];
+
+// Add featured tools with previews
+const featuredTools = [
+  {
+    name: 'Color Picker',
+    path: '/color-picker',
+    description: 'Advanced color selection with multiple formats',
+    preview: '/previews/color-picker.gif'
+  },
+  {
+    name: 'Image Converter',
+    path: '/image-converter',
+    description: 'Convert images between multiple formats with ease',
+    preview: '/previews/image-converter.gif'
+  },
+  {
+    name: 'PDF Tools',
+    path: '/pdf-converter',
+    description: 'Comprehensive PDF manipulation suite',
+    preview: '/previews/pdf-tools.gif'
+  }
+];
+
 export default function HomePage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredTools, setFilteredTools] = useState(tools);
+  const { scrollYProgress } = useScroll();
+  const opacity = useTransform(scrollYProgress, [0, 0.2], [1, 0]);
+  const scale = useTransform(scrollYProgress, [0, 0.2], [1, 0.95]);
 
   const handleSearch = (query) => {
     setSearchQuery(query);
@@ -103,49 +145,38 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen">
-      {/* Hero Section */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 text-white">
+      {/* Enhanced Hero Section */}
+      <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 text-white">
         {/* Animated background */}
-        <div className="absolute inset-0 opacity-20">
+        <motion.div 
+          style={{ opacity, scale }}
+          className="absolute inset-0 opacity-20"
+        >
           <div className="floating absolute top-20 left-10 w-20 h-20 bg-blue-500 rounded-full blur-xl"></div>
           <div className="floating absolute top-40 right-20 w-32 h-32 bg-purple-500 rounded-full blur-xl"></div>
           <div className="floating absolute bottom-20 left-1/4 w-24 h-24 bg-cyan-500 rounded-full blur-xl"></div>
-        </div>
+        </motion.div>
 
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 lg:py-32">
+        <div className="relative z-10 container mx-auto px-4 py-32">
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
-            className="text-center"
+            className="text-center max-w-4xl mx-auto"
           >
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-              className="inline-flex items-center px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 mb-8"
-            >
-              <SparklesIcon className="w-5 h-5 mr-2 text-yellow-400" />
-              <span className="text-sm font-medium">Your Ultimate Online Toolkit</span>
-            </motion.div>
-
-            <h1 className="text-5xl lg:text-7xl font-bold mb-6 leading-tight">
-              <span className="block">One-Use</span>
-              <span className="block bg-gradient-to-r from-blue-400 via-purple-400 to-cyan-400 bg-clip-text text-transparent">
-                Online Tools
-              </span>
+            <h1 className="text-5xl md:text-7xl font-bold mb-6 leading-tight">
+              All Your Tools in
+              <span className="bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent"> One Place</span>
             </h1>
-
-            <p className="text-xl lg:text-2xl text-gray-300 mb-12 max-w-3xl mx-auto leading-relaxed">
-              Powerful, fast, and intuitive tools for your daily tasks. 
-              From text processing to image editing, we've got you covered.
+            <p className="text-xl md:text-2xl text-gray-300 mb-12 leading-relaxed">
+              Powerful, free online tools for everyday tasks. No installation needed.
             </p>
 
-            {/* Search Bar */}
+            {/* Search Section */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.4 }}
+              transition={{ duration: 0.6, delay: 0.3 }}
               className="max-w-2xl mx-auto mb-12"
             >
               <div className="relative">
@@ -180,101 +211,243 @@ export default function HomePage() {
             </motion.div>
           </motion.div>
         </div>
+
+        {/* Scroll Indicator */}
+        <motion.div
+          animate={{ y: [0, 10, 0] }}
+          transition={{ duration: 2, repeat: Infinity }}
+          className="absolute bottom-8 left-1/2 transform -translate-x-1/2"
+        >
+          <div className="w-6 h-10 border-2 border-white/30 rounded-full flex items-start justify-center p-2">
+            <div className="w-1 h-3 bg-white/60 rounded-full"></div>
+          </div>
+        </motion.div>
       </section>
 
-      {/* Tools Grid */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          viewport={{ once: true }}
-          className="text-center mb-16"
-        >
-          <h2 className="text-4xl lg:text-5xl font-bold mb-6 gradient-text">
-            Choose Your Tool
-          </h2>
-          <p className="text-xl text-gray-600 dark:text-gray-400 max-w-3xl mx-auto">
-            Discover our comprehensive suite of online utilities designed to make your workflow seamless and efficient.
-          </p>
-        </motion.div>
-
-        <motion.div
-          variants={containerVariants}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true }}
-          className="grid gap-12"
-        >
-          {filteredTools.map((category, categoryIndex) => {
-            const IconComponent = category.icon;
-            return (
-              <motion.div key={category.category} variants={itemVariants}>
-                <div className="mb-8">
-                  <div className="flex items-center justify-center mb-4">
-                    <div className={cn(
-                      "p-3 rounded-2xl bg-gradient-to-r",
-                      category.color,
-                      "shadow-lg"
-                    )}>
-                      <IconComponent className="w-8 h-8 text-white" />
-                    </div>
-                  </div>
-                  <h3 className="text-2xl font-bold text-center mb-2 text-gray-900 dark:text-gray-100">
-                    {category.category}
-                  </h3>
+      {/* Statistics Section */}
+      <section className="py-20 bg-white dark:bg-gray-900">
+        <div className="container mx-auto px-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+            {stats.map((stat, index) => (
+              <motion.div
+                key={stat.name}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: index * 0.1 }}
+                className="text-center"
+              >
+                <div className="flex justify-center mb-4">
+                  <stat.icon className="w-8 h-8 text-blue-500" />
                 </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                  {category.tools.map((tool, toolIndex) => (
-                    <motion.div
-                      key={tool.name}
-                      variants={itemVariants}
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                    >
-                      <Link
-                        to={tool.path}
-                        className="tool-card block h-full"
-                      >
-                        <div className="text-center">
-                          <div className={cn(
-                            "w-12 h-12 mx-auto mb-4 rounded-xl bg-gradient-to-r transition-all duration-300 tool-icon flex items-center justify-center",
-                            category.color
-                          )}>
-                            <IconComponent className="w-6 h-6 text-white" />
-                          </div>
-                          <h4 className="text-lg font-semibold mb-2 text-gray-900 dark:text-gray-100">
-                            {tool.name}
-                          </h4>
-                          <p className="text-gray-600 dark:text-gray-400 text-sm leading-relaxed">
-                            {tool.description}
-                          </p>
-                        </div>
-                      </Link>
-                    </motion.div>
-                  ))}
+                <div className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+                  {stat.value}
+                </div>
+                <div className="text-gray-600 dark:text-gray-400">
+                  {stat.name}
                 </div>
               </motion.div>
-            );
-          })}
-        </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
 
-        {searchQuery && filteredTools.length === 0 && (
+      {/* Featured Tools Section */}
+      <section className="py-20 bg-gray-50 dark:bg-gray-800">
+        <div className="container mx-auto px-4">
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="text-center py-12"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="text-center mb-16"
           >
-            <div className="text-6xl mb-4">🔍</div>
-            <h3 className="text-2xl font-semibold mb-2 text-gray-900 dark:text-gray-100">
-              No tools found
-            </h3>
-            <p className="text-gray-600 dark:text-gray-400">
-              Try searching with different keywords or browse all available tools above.
+            <h2 className="text-4xl font-bold mb-4 gradient-text">
+              Featured Tools
+            </h2>
+            <p className="text-xl text-gray-600 dark:text-gray-400">
+              Discover our most popular and powerful tools
             </p>
           </motion.div>
-        )}
+
+          <div className="grid md:grid-cols-3 gap-8">
+            {featuredTools.map((tool, index) => (
+              <motion.div
+                key={tool.name}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: index * 0.1 }}
+                className="glass-card group hover:scale-105 transition-transform duration-300"
+              >
+                <Link to={tool.path} className="block p-6">
+                  <div className="aspect-video rounded-lg overflow-hidden mb-6 bg-gray-200 dark:bg-gray-700">
+                    <img
+                      src={tool.preview}
+                      alt={tool.name}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <h3 className="text-xl font-semibold mb-2 text-gray-900 dark:text-white group-hover:text-blue-500 transition-colors">
+                    {tool.name}
+                  </h3>
+                  <p className="text-gray-600 dark:text-gray-400">
+                    {tool.description}
+                  </p>
+                </Link>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Tools Grid Section */}
+      <section className="py-20 bg-white dark:bg-gray-900">
+        <div className="container mx-auto px-4">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="text-center mb-16"
+          >
+            <h2 className="text-4xl font-bold mb-4 gradient-text">
+              All Tools
+            </h2>
+            <p className="text-xl text-gray-600 dark:text-gray-400">
+              Find the perfect tool for your task
+            </p>
+          </motion.div>
+
+          <motion.div
+            variants={containerVariants}
+            initial="hidden"
+            whileInView="visible"
+            className="grid gap-12"
+          >
+            {filteredTools.map((category, categoryIndex) => {
+              const IconComponent = category.icon;
+              return (
+                <motion.div key={category.category} variants={itemVariants}>
+                  <div className="mb-8">
+                    <div className="flex items-center justify-center mb-4">
+                      <div className={cn(
+                        "p-3 rounded-2xl bg-gradient-to-r",
+                        category.color,
+                        "shadow-lg"
+                      )}>
+                        <IconComponent className="w-8 h-8 text-white" />
+                      </div>
+                    </div>
+                    <h3 className="text-2xl font-bold text-center mb-2 text-gray-900 dark:text-gray-100">
+                      {category.category}
+                    </h3>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    {category.tools.map((tool, toolIndex) => (
+                      <motion.div
+                        key={tool.name}
+                        variants={itemVariants}
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                      >
+                        <Link
+                          to={tool.path}
+                          className="tool-card block h-full"
+                        >
+                          <div className="text-center">
+                            <div className={cn(
+                              "w-12 h-12 mx-auto mb-4 rounded-xl bg-gradient-to-r transition-all duration-300 tool-icon flex items-center justify-center",
+                              category.color
+                            )}>
+                              <IconComponent className="w-6 h-6 text-white" />
+                            </div>
+                            <h4 className="text-lg font-semibold mb-2 text-gray-900 dark:text-gray-100">
+                              {tool.name}
+                            </h4>
+                            <p className="text-gray-600 dark:text-gray-400 text-sm leading-relaxed">
+                              {tool.description}
+                            </p>
+                          </div>
+                        </Link>
+                      </motion.div>
+                    ))}
+                  </div>
+                </motion.div>
+              );
+            })}
+          </motion.div>
+
+          {searchQuery && filteredTools.length === 0 && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="text-center py-12"
+            >
+              <div className="text-6xl mb-4">🔍</div>
+              <h3 className="text-2xl font-semibold mb-2 text-gray-900 dark:text-gray-100">
+                No tools found
+              </h3>
+              <p className="text-gray-600 dark:text-gray-400">
+                Try searching with different keywords or browse all available tools above.
+              </p>
+            </motion.div>
+          )}
+        </div>
+      </section>
+
+      {/* Getting Started Section */}
+      <section className="py-20 bg-gray-50 dark:bg-gray-800">
+        <div className="container mx-auto px-4">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="max-w-4xl mx-auto text-center"
+          >
+            <h2 className="text-4xl font-bold mb-4 gradient-text">
+              Get Started in Seconds
+            </h2>
+            <p className="text-xl text-gray-600 dark:text-gray-400 mb-12">
+              No sign-up required. Just choose a tool and start working.
+            </p>
+
+            <div className="grid md:grid-cols-3 gap-8">
+              <div className="glass-card p-6">
+                <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <span className="text-white font-bold text-xl">1</span>
+                </div>
+                <h3 className="text-xl font-semibold mb-2 text-gray-900 dark:text-white">
+                  Choose a Tool
+                </h3>
+                <p className="text-gray-600 dark:text-gray-400">
+                  Select from our wide range of powerful tools
+                </p>
+              </div>
+
+              <div className="glass-card p-6">
+                <div className="w-12 h-12 bg-purple-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <span className="text-white font-bold text-xl">2</span>
+                </div>
+                <h3 className="text-xl font-semibold mb-2 text-gray-900 dark:text-white">
+                  Upload or Input
+                </h3>
+                <p className="text-gray-600 dark:text-gray-400">
+                  Add your files or text with a simple drag & drop
+                </p>
+              </div>
+
+              <div className="glass-card p-6">
+                <div className="w-12 h-12 bg-cyan-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <span className="text-white font-bold text-xl">3</span>
+                </div>
+                <h3 className="text-xl font-semibold mb-2 text-gray-900 dark:text-white">
+                  Get Results
+                </h3>
+                <p className="text-gray-600 dark:text-gray-400">
+                  Download or copy your processed results instantly
+                </p>
+              </div>
+            </div>
+          </motion.div>
+        </div>
       </section>
     </div>
   );

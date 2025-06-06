@@ -118,7 +118,7 @@ export default function MiniGpt() {
                       "flex items-start space-x-3",
                       message.role === 'user' ? 'justify-end' : 'justify-start'
                     )}
-                  >
+                >
                     {message.role === 'assistant' && (
                       <div className="flex-shrink-0 w-8 h-8 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full flex items-center justify-center">
                         <CpuChipIcon className="w-4 h-4 text-white" />
@@ -132,7 +132,7 @@ export default function MiniGpt() {
                           ? "bg-gradient-to-r from-primary-600 to-primary-700 text-white ml-auto"
                           : "bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700"
                       )}
-                    >
+                >
                       <p className={cn(
                         "text-sm leading-relaxed whitespace-pre-wrap",
                         message.role === 'user' 
@@ -153,7 +153,7 @@ export default function MiniGpt() {
               )}
 
               {/* Loading indicator */}
-              {loading && (
+            {loading && (
                 <motion.div
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -178,16 +178,16 @@ export default function MiniGpt() {
               <div className="flex-1 relative">
                 <input
                   type="text"
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  placeholder="Type your message..."
-                  disabled={loading}
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder="Type your message..."
+              disabled={loading}
                   className="w-full px-4 py-3 pr-12 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-xl text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors disabled:opacity-50"
-                />
+            />
               </div>
               <motion.button
                 type="submit"
-                disabled={!input.trim() || loading}
+              disabled={!input.trim() || loading}
                 className={cn(
                   "p-3 rounded-xl transition-all duration-200",
                   "bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800",
@@ -196,7 +196,7 @@ export default function MiniGpt() {
                 )}
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-              >
+            >
                 <PaperAirplaneIcon className="w-5 h-5" />
               </motion.button>
             </form>

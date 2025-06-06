@@ -155,7 +155,7 @@ export default function ToneAnalyzer() {
           <div>
             <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3 flex items-center">
               <span className="w-2 h-2 bg-orange-500 rounded-full mr-2"></span>
-              Suggestions
+                  Suggestions
             </h4>
             <ul className="space-y-2">
               {result.suggestions.map((suggestion, index) => (

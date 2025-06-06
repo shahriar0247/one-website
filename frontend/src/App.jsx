@@ -9,6 +9,8 @@ import GrammarChecker from './components/GrammarChecker';
 import Paraphrase from './components/Paraphrase';
 import CaseConverter from './components/CaseConverter';
 import LineBreaks from './components/LineBreaks';
+import TextCaseConverter from './components/TextCaseConverter';
+import JSONFormatter from './components/JSONFormatter';
 
 // File Tools
 import PdfConverter from './components/PdfConverter';
@@ -29,6 +31,10 @@ import FakeNewsDetector from './components/FakeNewsDetector';
 import ColorPicker from './components/ColorPicker';
 import QrGenerator from './components/QrGenerator';
 import UnitConverter from './components/UnitConverter';
+import QRCodeGenerator from './components/QRCodeGenerator';
+import PasswordGenerator from './components/PasswordGenerator';
+import HashGenerator from './components/HashGenerator';
+import URLEncoder from './components/URLEncoder';
 
 export default function App() {
   return (
@@ -44,6 +50,8 @@ export default function App() {
             <Route path="/paraphrase" element={<Paraphrase />} />
             <Route path="/case-converter" element={<CaseConverter />} />
             <Route path="/line-breaks" element={<LineBreaks />} />
+            <Route path="/text-case-converter" element={<TextCaseConverter />} />
+            <Route path="/json-formatter" element={<JSONFormatter />} />
 
             {/* File Tools */}
             <Route path="/pdf-converter" element={<PdfConverter />} />
@@ -64,6 +72,10 @@ export default function App() {
             <Route path="/color-picker" element={<ColorPicker />} />
             <Route path="/qr-generator" element={<QrGenerator />} />
             <Route path="/unit-converter" element={<UnitConverter />} />
+            <Route path="/qr-code-generator" element={<QRCodeGenerator />} />
+            <Route path="/password-generator" element={<PasswordGenerator />} />
+            <Route path="/hash-generator" element={<HashGenerator />} />
+            <Route path="/url-encoder" element={<URLEncoder />} />
           </Routes>
         </Layout>
       </Router>

@@ -58,7 +58,7 @@ export default function FakeNewsDetector() {
         <div className="text-red-600 dark:text-red-400 p-4 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800">
           {result.error}
         </div>
-      );
+    );
     }
 
     const credibilityScore = result.credibility_score || 0;
@@ -106,10 +106,10 @@ export default function FakeNewsDetector() {
                   </span>
                   <span className="text-sm text-gray-900 dark:text-gray-100">{warning}</span>
                 </li>
-              ))}
+                  ))}
             </ul>
           </div>
-        )}
+            )}
 
         {/* Positive Indicators */}
         {result.positive_indicators && result.positive_indicators.length > 0 && (
@@ -161,10 +161,10 @@ export default function FakeNewsDetector() {
                   </span>
                   <span className="text-sm text-gray-900 dark:text-gray-100">{recommendation}</span>
                 </li>
-              ))}
+                ))}
             </ul>
           </div>
-        )}
+          )}
       </div>
     );
   };

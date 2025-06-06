@@ -84,7 +84,7 @@ export default function CaseConverter() {
     }
   };
 
-  return (
+    return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
@@ -142,8 +142,8 @@ export default function CaseConverter() {
             {caseOptions.map((option, index) => {
               const convertedText = text ? option.transform(text) : option.example;
               const isConverted = Boolean(text);
-              
-              return (
+
+  return (
                 <motion.div
                   key={option.label}
                   initial={{ opacity: 0, y: 20 }}

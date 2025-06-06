@@ -46,12 +46,12 @@ export default function LineBreaks() {
 
   const removeLineBreaks = () => {
     if (!text.trim()) return;
-    
+
     // Remove line breaks and normalize spaces
     const processedText = text
       .replace(/\n+/g, ' ')
       .replace(/\s+/g, ' ')
-      .trim();
+          .trim();
     
     setResult({ processed_text: processedText });
   };
@@ -123,7 +123,7 @@ export default function LineBreaks() {
           
           <button
             onClick={removeLineBreaks}
-            disabled={!text.trim()}
+              disabled={!text.trim()}
             className="w-full px-4 py-3 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 text-purple-700 dark:text-purple-300 rounded-lg hover:bg-purple-100 dark:hover:bg-purple-900/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <div className="text-center">

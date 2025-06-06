@@ -114,7 +114,7 @@ export default function GrammarChecker() {
             </h4>
             <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
               <p className="text-sm text-gray-900 dark:text-gray-100 leading-relaxed whitespace-pre-wrap">
-                {result.improved_text}
+              {result.improved_text}
               </p>
             </div>
           </div>
