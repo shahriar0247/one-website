@@ -1,121 +1,64 @@
 import React, { useCallback } from 'react';
-import PropTypes from 'prop-types';
 import { useDropzone } from 'react-dropzone';
-import { 
-  Box, 
-  Typography, 
-  Paper,
-  IconButton,
-} from '@mui/material';
-import CloudUploadIcon from '@mui/icons-material/CloudUpload';
-import DeleteIcon from '@mui/icons-material/Delete';
+import { motion } from 'framer-motion';
+import { CloudArrowUpIcon } from '@heroicons/react/24/outline';
 
 const FileUpload = ({ 
-  file, 
   onFileSelect, 
-  onClearFile, 
-  accept, 
-  maxSize = 10, // in MB
-  error 
+  accept = {}, 
+  maxFiles = 1,
+  maxSize = 10485760, // 10MB
+  className = ''
 }) => {
-  const onDrop = useCallback((acceptedFiles, rejectedFiles) => {
-    if (rejectedFiles?.length > 0) {
-      const rejection = rejectedFiles[0];
-      let errorMessage = 'File upload failed';
-      
-      if (rejection.errors[0].code === 'file-too-large') {
-        errorMessage = `File is too large. Max size is ${maxSize}MB`;
-      } else if (rejection.errors[0].code === 'file-invalid-type') {
-        errorMessage = 'Invalid file type';
-      }
-      
-      onFileSelect(null, errorMessage);
-      return;
-    }
-
-    if (acceptedFiles?.length > 0) {
-      onFileSelect(acceptedFiles[0], null);
-    }
-  }, [onFileSelect, maxSize]);
+  const onDrop = useCallback((acceptedFiles) => {
+    onFileSelect(acceptedFiles);
+  }, [onFileSelect]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     accept,
-    maxSize: maxSize * 1024 * 1024, // Convert MB to bytes
-    multiple: false
+    maxFiles,
+    maxSize,
   });
 
   return (
-    <Box>
-      <Paper
-        variant="outlined"
-        sx={{
-          p: 3,
-          bgcolor: isDragActive ? 'action.hover' : 'background.paper',
-          border: theme => `2px dashed ${error ? theme.palette.error.main : isDragActive ? theme.palette.primary.main : theme.palette.divider}`,
-          borderRadius: 1,
-          cursor: 'pointer',
-          transition: 'all 0.2s ease-in-out',
-          '&:hover': {
-            borderColor: theme => error ? theme.palette.error.main : theme.palette.primary.main,
-            bgcolor: 'action.hover',
-          },
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          gap: 1,
-        }}
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+      className={`w-full ${className}`}
+    >
+      <div
         {...getRootProps()}
+        className={`
+          relative border-2 border-dashed rounded-lg p-8
+          transition-colors duration-200 ease-in-out cursor-pointer
+          flex flex-col items-center justify-center text-center
+          ${isDragActive 
+            ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20' 
+            : 'border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500'
+          }
+        `}
       >
         <input {...getInputProps()} />
-        <CloudUploadIcon color={error ? "error" : "primary"} sx={{ fontSize: 40 }} />
-        
-        {file ? (
-          <Box sx={{ textAlign: 'center' }}>
-            <Typography variant="subtitle2" color="primary" noWrap>
-              {file.name}
-            </Typography>
-            <Typography variant="caption" color="text.secondary">
-              {(file.size / (1024 * 1024)).toFixed(2)}MB
-            </Typography>
-            <IconButton 
-              size="small" 
-              onClick={(e) => {
-                e.stopPropagation();
-                onClearFile();
-              }}
-              sx={{ ml: 1 }}
-            >
-              <DeleteIcon fontSize="small" />
-            </IconButton>
-          </Box>
-        ) : (
-          <>
-            <Typography variant="subtitle1" color={error ? "error" : "textPrimary"}>
-              {isDragActive ? 'Drop the file here' : 'Drag & drop a file here, or click to select'}
-            </Typography>
-            <Typography variant="caption" color="text.secondary">
-              Maximum file size: {maxSize}MB
-            </Typography>
-          </>
-        )}
-      </Paper>
-      {error && (
-        <Typography variant="caption" color="error" sx={{ mt: 1, display: 'block' }}>
-          {error}
-        </Typography>
-      )}
-    </Box>
+        <CloudArrowUpIcon 
+          className={`w-12 h-12 mb-4 ${
+            isDragActive ? 'text-blue-500' : 'text-gray-400 dark:text-gray-500'
+          }`} 
+        />
+        <p className="text-lg font-medium text-gray-700 dark:text-gray-300">
+          {isDragActive ? (
+            "Drop the files here..."
+          ) : (
+            "Drag & drop files here, or click to select"
+          )}
+        </p>
+        <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+          Maximum file size: {Math.round(maxSize / 1048576)}MB
+        </p>
+      </div>
+    </motion.div>
   );
-};
-
-FileUpload.propTypes = {
-  file: PropTypes.object,
-  onFileSelect: PropTypes.func.isRequired,
-  onClearFile: PropTypes.func.isRequired,
-  accept: PropTypes.string,
-  maxSize: PropTypes.number,
-  error: PropTypes.string,
 };
 
 export default FileUpload; 
