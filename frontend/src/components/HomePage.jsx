@@ -10,7 +10,11 @@ import {
   ArrowRightIcon,
   ChartBarIcon,
   UserGroupIcon,
-  ClockIcon
+  ClockIcon,
+  DocumentDuplicateIcon,
+  ScissorsIcon,
+  PencilIcon,
+  ArrowsUpDownIcon,
 } from '@heroicons/react/24/outline';
 import { Link } from 'react-router-dom';
 import { cn } from '../utils/cn';
@@ -64,6 +68,93 @@ const tools = [
       { name: 'Unit Converter', path: '/unit-converter', description: 'Convert between different units' },
       { name: 'PDF Converter', path: '/pdf-converter', description: 'Convert files to PDF format' },
     ]
+  },
+  {
+    id: 'pdf',
+    name: 'PDF Tools',
+    description: 'Comprehensive PDF manipulation tools',
+    tools: [
+      {
+        name: 'PDF Studio',
+        description: 'Complete PDF toolkit with compression, merging, splitting, editing, OCR, and more.',
+        href: '/pdf',
+        icon: DocumentTextIcon,
+        color: 'from-red-500 to-red-600',
+        features: [
+          'Smart compression',
+          'PDF merging',
+          'Page splitting',
+          'Text editing',
+          'OCR extraction',
+          'Form creation'
+        ]
+      },
+      {
+        name: 'PDF Compressor',
+        description: 'Reduce PDF file size while maintaining quality',
+        href: '/pdf/compress',
+        icon: ArrowsUpDownIcon,
+        color: 'from-blue-500 to-blue-600',
+        features: [
+          'Smart compression',
+          'Quality control',
+          'Batch processing',
+          'Size preview'
+        ]
+      },
+      {
+        name: 'PDF Merger',
+        description: 'Combine multiple PDFs into one document',
+        href: '/pdf/merge',
+        icon: DocumentDuplicateIcon,
+        color: 'from-green-500 to-green-600',
+        features: [
+          'Drag & drop',
+          'Reorder pages',
+          'Preview',
+          'Batch merge'
+        ]
+      },
+      {
+        name: 'PDF Splitter',
+        description: 'Split PDFs into multiple files or extract pages',
+        href: '/pdf/split',
+        icon: ScissorsIcon,
+        color: 'from-yellow-500 to-yellow-600',
+        features: [
+          'Split by range',
+          'Extract pages',
+          'Batch splitting',
+          'Preview'
+        ]
+      },
+      {
+        name: 'PDF Editor',
+        description: 'Edit PDF content, add forms, and annotate',
+        href: '/pdf/editor',
+        icon: PencilIcon,
+        color: 'from-purple-500 to-purple-600',
+        features: [
+          'Text editing',
+          'Form creation',
+          'Annotations',
+          'Page management'
+        ]
+      },
+      {
+        name: 'PDF OCR',
+        description: 'Extract text from scanned PDFs',
+        href: '/pdf/ocr',
+        icon: MagnifyingGlassIcon,
+        color: 'from-indigo-500 to-indigo-600',
+        features: [
+          'Text extraction',
+          'Multi-language',
+          'Format preservation',
+          'Batch processing'
+        ]
+      }
+    ]
   }
 ];
 
@@ -116,6 +207,26 @@ const featuredTools = [
     description: 'Comprehensive PDF manipulation suite',
     preview: '/previews/pdf-tools.gif'
   }
+];
+
+const FEATURED_TOOLS = [
+  // ... existing tools ...
+  {
+    name: 'PDF Studio',
+    description: 'Complete PDF toolkit with compression, merging, splitting, editing, OCR, and more.',
+    href: '/pdf',
+    icon: DocumentTextIcon,
+    color: 'from-red-500 to-red-600',
+    features: [
+      'Smart compression',
+      'PDF merging',
+      'Page splitting',
+      'Text editing',
+      'OCR extraction',
+      'Form creation'
+    ]
+  },
+  // ... other tools ...
 ];
 
 export default function HomePage() {
@@ -324,7 +435,7 @@ export default function HomePage() {
             {filteredTools.map((category, categoryIndex) => {
               const IconComponent = category.icon;
               return (
-                <motion.div key={category.category} variants={itemVariants}>
+                <motion.div key={category.id} variants={itemVariants}>
                   <div className="mb-8">
                     <div className="flex items-center justify-center mb-4">
                       <div className={cn(
@@ -336,7 +447,7 @@ export default function HomePage() {
                       </div>
                     </div>
                     <h3 className="text-2xl font-bold text-center mb-2 text-gray-900 dark:text-gray-100">
-                      {category.category}
+                      {category.name}
                     </h3>
                   </div>
 
@@ -349,7 +460,7 @@ export default function HomePage() {
                         whileTap={{ scale: 0.98 }}
                       >
                         <Link
-                          to={tool.path}
+                          to={tool.href}
                           className="tool-card block h-full"
                         >
                           <div className="text-center">

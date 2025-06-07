@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import ToolPage from './ui/ToolPage';
 import { cn } from '../utils/cn';
-import {
+import { 
   ArrowsRightLeftIcon,
   ArrowPathIcon,
   StarIcon as StarOutlineIcon,
@@ -312,12 +312,12 @@ export default function UnitConverter() {
                   ))}
                 </select>
                 <input
-                  type="number"
-                  value={fromValue}
+                type="number"
+                value={fromValue}
                   onChange={(e) => handleFromValueChange(e.target.value)}
                   placeholder="Enter value"
                   className="block w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
+              />
               </div>
             </div>
 
@@ -350,7 +350,7 @@ export default function UnitConverter() {
                 </select>
                 <input
                   type="number"
-                  value={toValue}
+                value={toValue}
                   onChange={(e) => handleToValueChange(e.target.value)}
                   placeholder="Enter value"
                   className="block w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-blue-500 focus:border-transparent"

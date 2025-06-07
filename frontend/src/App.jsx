@@ -36,6 +36,14 @@ import PasswordGenerator from './components/PasswordGenerator';
 import HashGenerator from './components/HashGenerator';
 import URLEncoder from './components/URLEncoder';
 
+// Import PDF tools
+import PDFStudio from './components/PDFStudio';
+import PDFCompressor from './components/PDFCompressor';
+import PDFMerger from './components/PDFMerger';
+import PDFSplitter from './components/PDFSplitter';
+import PDFEditor from './components/PDFEditor';
+import PDFOCR from './components/PDFOCR';
+
 export default function App() {
   return (
     <ThemeProvider>
@@ -76,6 +84,14 @@ export default function App() {
             <Route path="/password-generator" element={<PasswordGenerator />} />
             <Route path="/hash-generator" element={<HashGenerator />} />
             <Route path="/url-encoder" element={<URLEncoder />} />
+
+            {/* PDF Tools Routes */}
+            <Route path="/pdf" element={<PDFStudio />} />
+            <Route path="/pdf/compress" element={<PDFCompressor />} />
+            <Route path="/pdf/merge" element={<PDFMerger />} />
+            <Route path="/pdf/split" element={<PDFSplitter />} />
+            <Route path="/pdf/editor" element={<PDFEditor />} />
+            <Route path="/pdf/ocr" element={<PDFOCR />} />
           </Routes>
         </Layout>
       </Router>

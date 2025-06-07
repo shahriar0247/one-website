@@ -11,7 +11,11 @@ import {
   PhotoIcon,
   CpuChipIcon,
   WrenchScrewdriverIcon,
-  MagnifyingGlassIcon
+  MagnifyingGlassIcon,
+  DocumentDuplicateIcon,
+  ScissorsIcon,
+  PencilIcon,
+  ArrowsUpDownIcon,
 } from '@heroicons/react/24/outline';
 import { useTheme } from '../contexts/ThemeContext';
 import { cn } from '../utils/cn';
@@ -62,6 +66,51 @@ const navigation = [
       { name: 'Unit Converter', href: '/unit-converter' },
       { name: 'PDF Converter', href: '/pdf-converter' },
     ]
+  },
+];
+
+const PDF_TOOLS = [
+  {
+    name: 'PDF Studio',
+    description: 'All PDF tools in one place',
+    href: '/pdf',
+    icon: DocumentTextIcon,
+    color: 'from-red-500 to-red-600',
+  },
+  {
+    name: 'PDF Compressor',
+    description: 'Reduce PDF file size',
+    href: '/pdf/compress',
+    icon: ArrowsUpDownIcon,
+    color: 'from-blue-500 to-blue-600',
+  },
+  {
+    name: 'PDF Merger',
+    description: 'Combine multiple PDFs',
+    href: '/pdf/merge',
+    icon: DocumentDuplicateIcon,
+    color: 'from-green-500 to-green-600',
+  },
+  {
+    name: 'PDF Splitter',
+    description: 'Split PDF into multiple files',
+    href: '/pdf/split',
+    icon: ScissorsIcon,
+    color: 'from-yellow-500 to-yellow-600',
+  },
+  {
+    name: 'PDF Editor',
+    description: 'Edit PDF content and forms',
+    href: '/pdf/editor',
+    icon: PencilIcon,
+    color: 'from-purple-500 to-purple-600',
+  },
+  {
+    name: 'PDF OCR',
+    description: 'Extract text from scanned PDFs',
+    href: '/pdf/ocr',
+    icon: MagnifyingGlassIcon,
+    color: 'from-indigo-500 to-indigo-600',
   },
 ];
 
@@ -131,7 +180,7 @@ export default function Layout({ children }) {
 
   // Full layout for tool pages
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-slate-950 transition-colors duration-300">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Desktop Sidebar */}
       <div className="hidden lg:fixed lg:inset-y-0 lg:flex lg:w-72 lg:flex-col">
         <div className="flex grow flex-col overflow-y-auto glass border-r border-gray-200 dark:border-gray-800 px-6 pb-4">
@@ -328,7 +377,46 @@ export default function Layout({ children }) {
       <div className="lg:pl-72">
         <main className="py-8">
           <div className="px-4 sm:px-6 lg:px-8">
-        {children}
+            {/* Show PDF Tools grid only on homepage */}
+            {isHomePage && (
+              <div className="mb-8">
+                <h2 className="px-2 text-lg font-medium text-gray-900 dark:text-white mb-4">
+                  PDF Tools
+                </h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {PDF_TOOLS.map((tool) => {
+                    const IconComponent = tool.icon;
+                    return (
+                      <Link
+                        key={tool.href}
+                        to={tool.href}
+                        className="group relative rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 hover:shadow-lg transition-all duration-200"
+                      >
+                        <div className="flex items-center space-x-3">
+                          <div className={cn(
+                            "p-2 rounded-lg bg-gradient-to-r text-white",
+                            tool.color
+                          )}>
+                            <IconComponent className="w-5 h-5" />
+                          </div>
+                          <div>
+                            <h3 className="text-sm font-medium text-gray-900 dark:text-white">
+                              {tool.name}
+                            </h3>
+                            <p className="text-xs text-gray-500">
+                              {tool.description}
+                            </p>
+                          </div>
+                        </div>
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+            
+            {/* Always render the children content */}
+            {children}
           </div>
         </main>
       </div>
